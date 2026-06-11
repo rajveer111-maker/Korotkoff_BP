@@ -84,9 +84,9 @@ def run_validation(sub_select):
         rf_path  = os.path.join(BASE, 'Sub_1_Prof_kan', 'Rec_6.h5')
         wav_path = os.path.join(BASE, 'Sub_1_Prof_kan', 'sthethoscope_rec06.wav')
         out_path = os.path.join(BASE, 'rf_confirm_mag_phase_validation_Sub1_Rec6_Final.png')
-        k_on     = 27.530
-        k_off    = 43.330
-        defl     = 18.0
+        k_on     = 27.750
+        k_off    = 43.500
+        defl     = 18.3
         t_max    = 52.0
         lag      = 1.7083
         notches  = [100.71, 201.43, 302.14, 402.86]
@@ -96,7 +96,7 @@ def run_validation(sub_select):
         rf_path  = os.path.join(BASE, 'Sub_2_Rajveer', 'Rec_4.h5')
         wav_path = os.path.join(BASE, 'Sub_2_Rajveer', 'sthethoscope_rec04.wav')
         out_path = os.path.join(BASE, 'rf_confirm_mag_phase_validation_Sub2_Rec4_Final.png')
-        k_on     = 27.380
+        k_on     = 27.375
         k_off    = 42.000
         defl     = 18.6
         t_max    = 51.0

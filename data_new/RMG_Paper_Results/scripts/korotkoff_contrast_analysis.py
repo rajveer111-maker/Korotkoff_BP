@@ -89,13 +89,13 @@ def run(sub_select):
                 rf=os.path.join(BASE,'Sub_1_Prof_kan','Rec_6.h5'),
                 wav=os.path.join(BASE,'Sub_1_Prof_kan','sthethoscope_rec06.wav'),
                 out=os.path.join(BASE,'korotkoff_contrast_Sub1.png'),
-                k_on=27.53, k_off=43.33, defl=18.0, t_max=52.0, lag=1.7083,
+                k_on=27.75, k_off=43.50, defl=18.3, t_max=52.0, lag=1.7083,
                 notches=[100.71,201.43,302.14,402.86]),
         2: dict(name='Subject 2 (Rajveer)', rec='Rec 04',
                 rf=os.path.join(BASE,'Sub_2_Rajveer','Rec_4.h5'),
                 wav=os.path.join(BASE,'Sub_2_Rajveer','sthethoscope_rec04.wav'),
                 out=os.path.join(BASE,'korotkoff_contrast_Sub2.png'),
-                k_on=27.38, k_off=42.00, defl=18.6, t_max=51.0, lag=2.6042,
+                k_on=27.375, k_off=42.00, defl=18.6, t_max=51.0, lag=2.6042,
                 notches=[50.0,64.0,100.6,201.2]),
     }
     c = cfgs[sub_select]

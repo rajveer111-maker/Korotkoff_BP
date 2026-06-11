@@ -27,8 +27,8 @@ This study validates **Radiomyography (RMG)** — a non-contact technique using 
 
 | Subject | ID | Recording | Cuff Deflation Start | Korotkoff Window | Duration |
 |---|---|---|---|---|---|
-| Prof. Kan | Subject 1 | Rec 06 | 18.0 s | 27.53 – 43.33 s | **15.80 s** |
-| Rajveer | Subject 2 | Rec 04 | 18.6 s | 27.38 – 42.00 s | **14.62 s** |
+| Prof. Kan | Subject 1 | Rec 06 | 18.3 s | 27.75 – 43.50 s | **15.75 s** |
+| Rajveer | Subject 2 | Rec 04 | 18.6 s | 27.375 – 42.00 s | **14.63 s** |
 
 ### Equipment
 - **RF Sensor**: 900 MHz CW, 2-channel in-phase/quadrature (I/Q) output, 10,000 Hz sampling
@@ -202,7 +202,7 @@ The 0.4–3 Hz compliance pulse is shown zoomed to the Korotkoff window. The hea
 
 All three TKEO envelopes are overlaid on a single axis. Beat detection markers from the Phase channel are shown as vertical lines.
 
-- *Finding:* All three curves show elevated energy in the Korotkoff window and near-zero energy outside. The Phase TKEO achieves **+7.7 dB SNR (Subject 1) and +5.1 dB SNR (Subject 2)**. The Magnitude TKEO achieves **+3.6 dB and +4.3 dB** respectively. After temporal alignment, the RF and stethoscope envelopes are in close agreement, with corresponding energy peaks at the same beat instants.
+- *Finding:* All three curves show elevated energy in the Korotkoff window and near-zero energy outside. The Phase TKEO achieves **+7.9 dB SNR (Subject 1) and +5.1 dB SNR (Subject 2)**. The Magnitude TKEO achieves **+3.5 dB and +4.3 dB** respectively. After temporal alignment, the RF and stethoscope envelopes are in close agreement, with corresponding energy peaks at the same beat instants.
 
 **Panel F — Phase Power Spectral Density: Korotkoff vs Baseline**
 
@@ -267,7 +267,7 @@ PSD of the Magnitude velocity (Panel I) and Phase velocity (Panel J) in two wind
 
 | Subject | RF Fused Beats | GT Beats | Error | RF HR (BPM) | GT HR (BPM) |
 |---|---|---|---|---|---|
-| **Subject 1** | **20** | **22** | −2 (−9%) | 75.5 | 81.6 |
+| **Subject 1** | **20** | **22** | −2 (−9%) | 75.5 | 81.8 |
 | **Subject 2** | **21** | **19** | +2 (+10%) | 83.9 | 76.7 |
 
 ---
@@ -344,8 +344,8 @@ The fused TKEO envelope overlaid with the GT stethoscope envelope and detected b
 
 | Subject | Channel | TKEO SNR (dB) | Energy Rise in Korotkoff (dB) |
 |---|---|---|---|
-| Subject 1 (Prof. Kan) | RF Phase Velocity | **+7.7 dB** | +6–10 dB |
-| Subject 1 (Prof. Kan) | RF Magnitude | +3.6 dB | +4–6 dB |
+| Subject 1 (Prof. Kan) | RF Phase Velocity | **+7.9 dB** | +6–10 dB |
+| Subject 1 (Prof. Kan) | RF Magnitude | +3.5 dB | +4–6 dB |
 | Subject 2 (Rajveer) | RF Phase Velocity | +5.1 dB | +4–7 dB |
 | Subject 2 (Rajveer) | RF Magnitude | **+4.3 dB** | +3–5 dB |
 
@@ -353,22 +353,22 @@ The fused TKEO envelope overlaid with the GT stethoscope envelope and detected b
 
 | Subject | Fused Beats | GT Beats | Count Error | Mean IBI Error | HR Error |
 |---|---|---|---|---|---|
-| Subject 1 | 20 | 22 | −2 (−9%) | ~65 ms | −6.1 BPM |
+| Subject 1 | 20 | 22 | −2 (−9%) | ~65 ms | −6.3 BPM |
 | Subject 2 | 21 | 19 | +2 (+10%) | ~75 ms | +7.2 BPM |
 
 ### Korotkoff Window Duration
 
 | Subject | Annotated Duration | Stethoscope Confirmed |
 |---|---|---|
-| Subject 1 | **15.80 s** | Yes |
-| Subject 2 | **14.62 s** | Yes |
+| Subject 1 | **15.75 s** | Yes |
+| Subject 2 | **14.63 s** | Yes |
 
 ---
 
 ## 8. Key Findings for Paper
 
 ### Finding 1: Phase Velocity is the Superior Primary Channel
-The Phase velocity signal achieves +7.7 dB SNR (Subject 1), nearly double the Magnitude (+3.6 dB). Phase is more sensitive to arterial wall micro-displacement because it is a direct measure of path-length change, whereas Magnitude is affected by both displacement and reflectivity changes.
+The Phase velocity signal achieves +7.9 dB SNR (Subject 1), nearly double the Magnitude (+3.5 dB). Phase is more sensitive to arterial wall micro-displacement because it is a direct measure of path-length change, whereas Magnitude is affected by both displacement and reflectivity changes.
 
 ### Finding 2: Magnitude Provides Complementary Information
 After harmonic notch filtering, the Magnitude channel achieves +4.3 dB SNR (Subject 2, where Phase is noisier). Fusing both channels via L2 normalisation recovers beats that would be missed by either channel alone, reducing the beat count error to ≤2 across both subjects.

@@ -268,10 +268,11 @@ def load_and_process(rf_path, wav_path, k_on, k_off, defl_onset, notches, lag):
     }
 
 print("Processing Subject 1 (Prof. Kan, Rec 06)...")
-sub1 = load_and_process(SUB1_RF, SUB1_WAV, k_on=27.53, k_off=43.33, defl_onset=18.0, notches=[100.71, 201.43, 302.14, 402.86], lag=1.7083)
+sub1 = load_and_process(SUB1_RF, SUB1_WAV, k_on=27.75, k_off=43.50, defl_onset=18.3, notches=[100.71, 201.43, 302.14, 402.86], lag=1.7083)
 
 print("Processing Subject 2 (Rajveer, Rec 04)...")
-sub2 = load_and_process(SUB2_RF, SUB2_WAV, k_on=27.38, k_off=42.00, defl_onset=18.6, notches=[50.0, 64.0, 100.6, 201.2], lag=2.6042)
+sub2 = load_and_process(SUB2_RF, SUB2_WAV, k_on=27.375, k_off=42.00, defl_onset=18.6, notches=[50.0, 64.0, 100.6, 201.2], lag=2.6042)
+
 
 # ── PLOT MASTER 3x2 COHORT DASHBOARD ──────────────────────────────
 print("Plotting premium 3x2 cohort master figure...")
@@ -301,16 +302,16 @@ ax1A = axes[0, 0]
 style_ax_extra_large(
     ax1A, 
     "(A) Subject 1 (Prof. Kan, Rec 06): Arterial Compliance Pulses vs. Cuff Pressure\n"
-    f"[GT: SBP=125, DBP=75, MAP=92 mmHg | Dur=15.8s | HR: RF = {sub1['hr_rf']:.0f} BPM, Steth = {sub1['hr_st']:.0f} BPM]",
+    f"[GT: SBP=125, DBP=75, MAP=92 mmHg | Dur=15.75s | HR: RF = {sub1['hr_rf']:.0f} BPM, Steth = {sub1['hr_st']:.0f} BPM]",
     "Time (s)", "Normalized Compliance Displacement (a.u.)"
 )
 ds_1_rf = max(1, len(sub1['t_rf'])//4000)
 ds_1_st = max(1, len(sub1['t_aud'])//6000)
 
 # Shading Zones matching their provided concept image
-ax1A.axvspan(0.0, 18.0, color='#E5E8E8', alpha=0.5, label='Inflation Phase (~18 s)')
-ax1A.axvspan(18.0, 27.53, color='#BDC3C7', alpha=0.3, label='Occluded (above SBP)')
-ax1A.axvspan(27.53, 43.33, color='#FDF2E9', alpha=0.7, label='Korotkoff Region (15.80 s)')
+ax1A.axvspan(0.0, 18.3, color='#E5E8E8', alpha=0.5, label='Inflation Phase (~18.3 s)')
+ax1A.axvspan(18.3, 27.75, color='#BDC3C7', alpha=0.3, label='Occluded (above SBP)')
+ax1A.axvspan(27.75, 43.50, color='#FDF2E9', alpha=0.7, label='Korotkoff Region (15.75 s)')
 
 # Plot raw heartbeat displacement (thin)
 ax1A.plot(sub1['t_rf'][::ds_1_rf], normalize_pulse_for_display(sub1['t_rf'], sub1['dh'], sub1['defl_onset'])[::ds_1_rf], color=C_RF, lw=1.5, alpha=0.9, label='RF Heartbeat Pulses')
@@ -320,19 +321,19 @@ ax1A.plot(sub1['t_aud'][::ds_1_st], normalize_pulse_for_display(sub1['t_aud'], s
 ax1A_cuff = ax1A.twinx()
 t_grid_1 = np.linspace(0, 52, 500)
 p_grid_1 = np.zeros_like(t_grid_1)
-beta_active_1 = 50.0 / (43.33 - 27.53)
-p_onset_1 = 125.0 + beta_active_1 * (27.53 - 18.0)
-p_grid_1[t_grid_1 <= 18.0] = (p_onset_1 / 18.0) * t_grid_1[t_grid_1 <= 18.0]
-p_grid_1[t_grid_1 > 18.0] = 125.0 - beta_active_1 * (t_grid_1[t_grid_1 > 18.0] - 27.53)
+beta_active_1 = 50.0 / (43.50 - 27.75)
+p_onset_1 = 125.0 + beta_active_1 * (27.75 - 18.3)
+p_grid_1[t_grid_1 <= 18.3] = (p_onset_1 / 18.3) * t_grid_1[t_grid_1 <= 18.3]
+p_grid_1[t_grid_1 > 18.3] = 125.0 - beta_active_1 * (t_grid_1[t_grid_1 > 18.3] - 27.75)
 ax1A_cuff.plot(t_grid_1, p_grid_1, color='#7D3C98', lw=2.5, alpha=0.7, label='Cuff Pressure')
 ax1A_cuff.set_ylabel('Cuff Pressure (mmHg)', color='#7D3C98', fontsize=14, labelpad=7)
 ax1A_cuff.tick_params(axis='y', colors='#7D3C98', labelsize=13)
 ax1A_cuff.set_ylim([0, 180])
 
 # Clinical BP markers
-ax1A.axvline(27.53, color='#E63946', ls='--', lw=2.0)
-ax1A.axvline(43.33, color='#2980B9', ls='--', lw=2.0)
-t_map_1 = 27.53 + (2.0/3.0) * (43.33 - 27.53)
+ax1A.axvline(27.75, color='#E63946', ls='--', lw=2.0)
+ax1A.axvline(43.50, color='#2980B9', ls='--', lw=2.0)
+t_map_1 = 27.75 + (2.0/3.0) * (43.50 - 27.75)
 ax1A.axvline(t_map_1, color='#E67E22', ls='--', lw=2.0)
 
 ax1A.set_xlim([0, 52])
@@ -344,16 +345,16 @@ ax1B = axes[0, 1]
 style_ax_extra_large(
     ax1B, 
     "(B) Subject 2 (Rajveer, Rec 04): Arterial Compliance Pulses vs. Cuff Pressure\n"
-    f"[GT: SBP=125, DBP=75, MAP=92 mmHg | Dur=14.6s | HR: RF = {sub2['hr_rf']:.0f} BPM, Steth = {sub2['hr_st']:.0f} BPM]",
+    f"[GT: SBP=125, DBP=75, MAP=92 mmHg | Dur=14.63s | HR: RF = {sub2['hr_rf']:.0f} BPM, Steth = {sub2['hr_st']:.0f} BPM]",
     "Time (s)", "Normalized Compliance Displacement (a.u.)"
 )
 ds_2_rf = max(1, len(sub2['t_rf'])//4000)
 ds_2_st = max(1, len(sub2['t_aud'])//6000)
 
 # Shading Zones
-ax1B.axvspan(0.0, 18.6, color='#E5E8E8', alpha=0.5, label='Inflation Phase (~19 s)')
-ax1B.axvspan(18.6, 27.38, color='#BDC3C7', alpha=0.3, label='Occluded (above SBP)')
-ax1B.axvspan(27.38, 42.00, color='#FDF2E9', alpha=0.7, label='Korotkoff Region (14.62 s)')
+ax1B.axvspan(0.0, 18.6, color='#E5E8E8', alpha=0.5, label='Inflation Phase (~18.6 s)')
+ax1B.axvspan(18.6, 27.375, color='#BDC3C7', alpha=0.3, label='Occluded (above SBP)')
+ax1B.axvspan(27.375, 42.00, color='#FDF2E9', alpha=0.7, label='Korotkoff Region (14.63 s)')
 
 # Plot raw heartbeat displacement (thin)
 ax1B.plot(sub2['t_rf'][::ds_2_rf], normalize_pulse_for_display(sub2['t_rf'], sub2['dh'], sub2['defl_onset'])[::ds_2_rf], color=C_RF, lw=1.5, alpha=0.9, label='RF Heartbeat Pulses')
@@ -363,19 +364,19 @@ ax1B.plot(sub2['t_aud'][::ds_2_st], normalize_pulse_for_display(sub2['t_aud'], s
 ax1B_cuff = ax1B.twinx()
 t_grid_2 = np.linspace(0, 51.0, 500)
 p_grid_2 = np.zeros_like(t_grid_2)
-beta_active_2 = 50.0 / (42.00 - 27.38)
-p_onset_2 = 125.0 + beta_active_2 * (27.38 - 18.6)
+beta_active_2 = 50.0 / (42.00 - 27.375)
+p_onset_2 = 125.0 + beta_active_2 * (27.375 - 18.6)
 p_grid_2[t_grid_2 <= 18.6] = (p_onset_2 / 18.6) * t_grid_2[t_grid_2 <= 18.6]
-p_grid_2[t_grid_2 > 18.6] = 125.0 - beta_active_2 * (t_grid_2[t_grid_2 > 18.6] - 27.38)
+p_grid_2[t_grid_2 > 18.6] = 125.0 - beta_active_2 * (t_grid_2[t_grid_2 > 18.6] - 27.375)
 ax1B_cuff.plot(t_grid_2, p_grid_2, color='#7D3C98', lw=2.5, alpha=0.7, label='Cuff Pressure')
 ax1B_cuff.set_ylabel('Cuff Pressure (mmHg)', color='#7D3C98', fontsize=14, labelpad=7)
 ax1B_cuff.tick_params(axis='y', colors='#7D3C98', labelsize=13)
 ax1B_cuff.set_ylim([0, 180])
 
 # BP markers
-ax1B.axvline(27.38, color='#E63946', ls='--', lw=2.0)
+ax1B.axvline(27.375, color='#E63946', ls='--', lw=2.0)
 ax1B.axvline(42.00, color='#2980B9', ls='--', lw=2.0)
-t_map_2 = 27.38 + (2.0/3.0) * (42.00 - 27.38)
+t_map_2 = 27.375 + (2.0/3.0) * (42.00 - 27.375)
 ax1B.axvline(t_map_2, color='#E67E22', ls='--', lw=2.0)
 
 ax1B.set_xlim([0, 51.0])
@@ -442,8 +443,8 @@ style_ax_extra_large(
 for name, env in sub1['env_rf_dict'].items():
     env_norm = normalize_envelope_for_display(sub1['t_rf'], env, sub1['defl_onset'])
     ax3A.plot(sub1['t_rf'][::ds_1_rf], env_norm[::ds_1_rf], color=COLORS_6[name], lw=1.2, alpha=0.75, label=name)
-ax3A.axvspan(27.53, 43.33, color=C_HIGHLIGHT, alpha=0.3, 
-             label="Consensus Shaded Duration (15.80 s)")
+ax3A.axvspan(27.75, 43.50, color=C_HIGHLIGHT, alpha=0.3, 
+             label="Consensus Shaded Duration (15.75 s)")
 ax3A.set_xlim([0, 52.0])
 ax3A.set_ylim([-0.05, 1.05])
 ax3A.legend(fontsize=10.5, loc='upper left', ncol=3, frameon=False)
@@ -459,8 +460,8 @@ style_ax_extra_large(
 for name, env in sub2['env_rf_dict'].items():
     env_norm = normalize_envelope_for_display(sub2['t_rf'], env, sub2['defl_onset'])
     ax3B.plot(sub2['t_rf'][::ds_2_rf], env_norm[::ds_2_rf], color=COLORS_6[name], lw=1.2, alpha=0.75, label=name)
-ax3B.axvspan(27.38, 42.00, color=C_HIGHLIGHT, alpha=0.3, 
-             label="Consensus Shaded Duration (14.62 s)")
+ax3B.axvspan(27.375, 42.00, color=C_HIGHLIGHT, alpha=0.3, 
+             label="Consensus Shaded Duration (14.63 s)")
 ax3B.set_xlim([0, 51.0])
 ax3B.set_ylim([-0.05, 1.05])
 ax3B.legend(fontsize=10.5, loc='upper left', ncol=3, frameon=False)
