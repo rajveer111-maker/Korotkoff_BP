@@ -1,0 +1,468 @@
+import h5py, numpy as np, os, pandas as pd, sys
+from scipy import signal
+import matplotlib.pyplot as plt
+
+FILE_PATH = r'd:\Bioview\My_RF_work_v1\data_new\rec_koro_sthe.h5'
+if len(sys.argv) > 1:
+    FILE_PATH = sys.argv[1]
+
+FS = 10000
+base_name = os.path.splitext(os.path.basename(FILE_PATH))[0]
+OUTPUT_IMG = os.path.join(os.path.dirname(FILE_PATH), f'koro_{base_name}.png')
+
+def sliding_rms(x, w): return np.sqrt(pd.Series(x).pow(2).rolling(window=w).mean().fillna(0).values)
+def sliding_kurtosis(x, w): return pd.Series(x).rolling(window=w).kurt().fillna(0).values
+def calc_tkeo(x):
+    t = np.zeros_like(x); t[1:-1] = x[1:-1]**2 - x[:-2]*x[2:]; return t
+
+def run():
+    print(f"Loading H5 file: {FILE_PATH}")
+    if not os.path.exists(FILE_PATH): print("File not found"); return
+    with h5py.File(FILE_PATH, 'r') as f: data = f['data'][:]
+    i_raw, q_raw = data[0,:], data[1,:]
+    time = np.arange(len(i_raw)) / FS
+    N = len(i_raw)
+
+    # === SIGNAL PROCESSING ===
+    # Center the IF circle
+    i_c, q_c = i_raw - np.mean(i_raw), q_raw - np.mean(q_raw)
+    iq = i_c + 1j * q_c
+    # 50 Hz low-pass filter to remove USRP high-frequency white noise before unwrapping
+    sos_lp = signal.butter(4, 50.0, btype='low', fs=FS, output='sos')
+    iq_clean = signal.sosfiltfilt(sos_lp, iq)
+    
+    # Define dynamic mask to completely eliminate massive startup inflation and final deflated noise transients
+    T_MASK_START = 10.0 if "sthe" in FILE_PATH else 5.0
+    T_MASK_END = 10.0 if "sthe" in FILE_PATH else 5.0
+    idx_mask_start = int(T_MASK_START * FS)
+    idx_mask_end = int(T_MASK_END * FS)
+    
+    # Mask out raw complex signal by keeping it beautifully flat at the boundaries
+    iq_clean[:idx_mask_start] = iq_clean[idx_mask_start]
+    iq_clean[-idx_mask_end:] = iq_clean[-idx_mask_end]
+    
+    mag_raw = np.abs(iq)
+
+    # Phase processing: Decoupled Phase Reconstruction to isolate inflation and deflation
+    idx_deflation = int(20.0 * FS)
+    
+    # 1. Process the deflation period (t >= 20s) with absolute high-fidelity precision
+    phase_unwrap_def = np.unwrap(np.angle(iq_clean[idx_deflation:]))
+    dphi_def = np.diff(phase_unwrap_def)
+    carrier_offset = np.median(dphi_def)  # rad/sample
+    dphi_clean_def = dphi_def - carrier_offset
+    dphi_clean_def = np.clip(dphi_clean_def, -0.5, 0.5)
+    phase_clean_def = np.insert(np.cumsum(dphi_clean_def), 0, 0)
+    # Detrend using a 2nd-order polynomial to remove residual warm-up drift (use normalized index for absolute numerical precision)
+    t_idx = np.arange(len(phase_clean_def))
+    t_norm = (t_idx - np.mean(t_idx)) / (np.max(t_idx) - np.min(t_idx) + 1e-9)
+    poly_def = np.polyfit(t_norm, phase_clean_def, 2)
+    phase_clean_def = phase_clean_def - np.polyval(poly_def, t_norm)
+    
+    # 2. Process the inflation period (0-20s) with raw wrapped phase (perfect noise, no steps!)
+    phase_clean_inf = np.angle(iq_clean[:idx_deflation])
+    # Zero-center the inflation noise using a 1-second rolling mean
+    phase_clean_inf = phase_clean_inf - pd.Series(phase_clean_inf).rolling(window=int(FS*1.0), center=True).mean().bfill().ffill().values
+    
+    # Shift phase_clean_inf so that its end aligns perfectly with the start of phase_clean_def
+    shift = phase_clean_def[0] - phase_clean_inf[-1]
+    phase_clean_inf = phase_clean_inf + shift
+    
+    # 3. Combine both into a single continuous, step-free phase trace
+    phase_clean = np.zeros(len(iq))
+    phase_clean[:idx_deflation] = phase_clean_inf
+    phase_clean[idx_deflation:] = phase_clean_def
+
+    # Physical conversion
+    LAMBDA_MM = (299792458 / 0.9e9) * 1000  # 333.10 mm
+    SCALE = LAMBDA_MM / (4 * np.pi)          # 26.51 mm/rad
+
+    # === Preprocessing Magnitude Signal ===
+    mag_clean = np.abs(iq_clean)
+    # Apply 50 Hz notch filter to magnitude to kill powerline hum
+    b50, a50 = signal.iirnotch(50.0, 30, FS)
+    mag_clean_notched = signal.filtfilt(b50, a50, mag_clean)
+
+    # Decoupled Magnitude Detrending
+    # 1. Process deflation period
+    mag_unwrap_def = mag_clean_notched[idx_deflation:]
+    poly_mag = np.polyfit(t_norm, mag_unwrap_def, 2)
+    mag_clean_def = mag_unwrap_def - np.polyval(poly_mag, t_norm)
+    
+    # 2. Process inflation period (zero-centered)
+    mag_clean_inf = mag_clean_notched[:idx_deflation]
+    mag_clean_inf = mag_clean_inf - pd.Series(mag_clean_inf).rolling(window=int(FS*1.0), center=True).mean().bfill().ffill().values
+    
+    # Align and shift so it is 100% continuous at 20.0s
+    shift_mag = mag_clean_def[0] - mag_clean_inf[-1]
+    mag_clean_inf = mag_clean_inf + shift_mag
+    
+    # 3. Combine both into a single preprocessed magnitude signal
+    mag_preprocessed = np.zeros(len(iq))
+    mag_preprocessed[:idx_deflation] = mag_clean_inf
+    mag_preprocessed[idx_deflation:] = mag_clean_def
+
+    # ---- DERIVATION CHAIN ----
+    sos_hr = signal.butter(4, [0.5, 3.0], btype='band', fs=FS, output='sos')
+    sos_koro = signal.butter(4, [10, 49], btype='band', fs=FS, output='sos')
+
+    phase_hr = signal.sosfiltfilt(sos_hr, phase_clean)     # rad
+    phase_koro = signal.sosfiltfilt(sos_koro, phase_clean)  # rad
+
+    # Phase -> Displacement: converted to micrometers (um)
+    disp_hr = phase_hr * SCALE * 1000      # um
+    disp_koro = phase_koro * SCALE * 1000   # um
+
+    # Displacement -> Velocity (mm/s)
+    # Since disp is in um, velocity in mm/s = d(disp_um)/dt / 1000
+    vel_hr = np.append(np.diff(disp_hr) * FS / 1000, 0)      # mm/s
+    vel_koro = np.append(np.diff(disp_koro) * FS / 1000, 0)   # mm/s
+
+    # Magnitude Heartbeat and Korotkoff derivations
+    mag_hr = signal.sosfiltfilt(sos_hr, mag_preprocessed)     # magnitude a.u.
+    mag_koro = signal.sosfiltfilt(sos_koro, mag_preprocessed)  # magnitude a.u.
+    hr_mag = mag_hr
+
+    # Magnitude Velocity (a.u./s)
+    vel_mag_hr = np.append(np.diff(mag_hr) * FS, 0)
+    vel_mag_koro = np.append(np.diff(mag_koro) * FS, 0)
+
+    # Koro window detection
+    vel_tkeo = calc_tkeo(vel_koro)
+    ph_energy = sliding_rms(vel_koro, int(FS*0.3))**2
+    sm_energy = pd.Series(ph_energy).rolling(window=int(FS*2), center=True).mean().fillna(0).values
+    
+    # Calculate Magnitude-derived Koro Energy and TKEO for supreme clinical clarity
+    vel_mag_tkeo = calc_tkeo(vel_mag_koro)
+    mag_koro_energy = sliding_rms(vel_mag_koro, int(FS*0.3))**2
+    sm_mag_energy = pd.Series(mag_koro_energy).rolling(window=int(FS*2), center=True).mean().fillna(0).values
+    T_SKIP = 5
+    vs = int(10.0 * FS)
+    ve = min(int(len(sm_energy) - T_SKIP*FS), int(40*FS))
+    eth = np.max(sm_energy[vs:ve]) * 0.05
+    on_s, off_s = 20.0, 35.0
+    dur = off_s - on_s
+
+    # Beat detection (skip first 5s and last 5s to avoid pure noise/transients)
+    beat_start_idx = int(T_SKIP * FS)
+    beat_end_idx = int((time[-1] - T_SKIP) * FS)
+    qs = int(off_s*FS)+int(2*FS); qe = min(beat_end_idx, qs+int(8*FS))
+    pth = np.std(hr_mag[qs:qe])*1.5 if qe > qs+int(2*FS) else np.std(hr_mag[beat_start_idx:beat_end_idx])
+    peaks_val, _ = signal.find_peaks(hr_mag[beat_start_idx:beat_end_idx], distance=int(FS*0.4), prominence=pth)
+    peaks = peaks_val + beat_start_idx
+    if len(peaks) > 1:
+        iv = np.diff(time[peaks]); viv = iv[(iv>0.4)&(iv<1.5)]
+        hr_bpm_t = 60.0/np.median(viv) if len(viv) > 0 else 0
+    else: hr_bpm_t = 0
+
+    # Stats
+    wl = int(FS*0.5)
+    vel_kurt = sliding_kurtosis(vel_koro, wl)
+    vel_jitter = sliding_rms(vel_koro, wl)
+    koro_env = sliding_rms(vel_koro, int(FS*0.2))**2
+    koro_th = np.mean(koro_env) + 2*np.std(koro_env)
+    vel_e = sliding_rms(vel_koro, int(FS*0.1))
+    vel_cr = pd.Series(np.abs(np.append(np.diff(vel_e)*FS, 0))).rolling(int(FS*0.2)).mean().fillna(0).values
+
+    # HR PSD
+    if qe > qs+int(2*FS):
+        f_hr, p_hr = signal.welch(disp_hr[qs:qe]/1000, fs=FS, nperseg=min(qe-qs, int(FS*5)))
+    else:
+        f_hr, p_hr = signal.welch(disp_hr[beat_start_idx:beat_end_idx]/1000, fs=FS, nperseg=int(FS*10))
+    hm = (f_hr>=0.5)&(f_hr<=3.0)
+    hr_pk = f_hr[hm][np.argmax(p_hr[hm])] if np.any(hm) else 0
+    hr_bpm_f = hr_pk*60
+
+    # Active vs Noise SNR (using unmasked deflated region [off_s+2s, ...] as clean physical noise reference)
+    snr_db = 0
+    if on_s < off_s:
+        io, ie = int(on_s*FS), int(off_s*FS)
+        av = vel_koro[io:ie]
+        ns = min(ie + int(2*FS), len(vel_koro) - int(T_MASK_END*FS) - len(av))
+        if ns > ie:
+            nv = vel_koro[ns : ns + len(av)]
+            nps = min(1024, len(av), len(nv))
+            f_a, p_a = signal.welch(av, fs=FS, nperseg=nps)
+            f_n, p_n = signal.welch(nv, fs=FS, nperseg=nps)
+            km = (f_a>=10)&(f_a<=49)
+            if np.any(km) and np.mean(p_n[km])>0: snr_db = 10*np.log10(np.mean(p_a[km])/np.mean(p_n[km]))
+
+    co_hz = carrier_offset * FS / (2*np.pi)
+
+    # Calculate limits
+    if on_s < off_s:
+        io, ie = int(on_s*FS), int(off_s*FS)
+        ph_hr_lim = max(0.1, np.percentile(np.abs(phase_hr[io:ie]), 99.5) * 1.5)
+        ph_koro_lim = max(0.1, np.percentile(np.abs(phase_koro[io:ie]), 99.5) * 1.5)
+        vel_koro_lim = max(100, np.percentile(np.abs(vel_koro[io:ie]), 99.5) * 1.5)
+    else:
+        ph_hr_lim, ph_koro_lim, vel_koro_lim = 1.0, 1.0, 1000
+    disp_hr_lim = ph_hr_lim * SCALE * 1000  # um
+    disp_koro_lim = ph_koro_lim * SCALE * 1000  # um
+
+    # === PLOTTING 8x2 COMPREHENSIVE DASHBOARD ===
+    fig, axes = plt.subplots(8, 2, figsize=(22, 40))
+    plt.subplots_adjust(hspace=0.55)
+    yw = dict(color='yellow', alpha=0.2)
+
+    # Row 1: Magnitude Overview | Bandpassed Phase
+    ax = axes[0,0]
+    # Primary axis for Raw Magnitude (before BPF/notch) - light blue
+    ax.plot(time, mag_raw, 'lightskyblue', alpha=0.5, label='Raw Magnitude (S11)')
+    ax.set_ylabel('Raw Magnitude (a.u.)', color='darkblue')
+    ax.tick_params(axis='y', labelcolor='darkblue')
+    
+    # Auto-scale primary axis to cleanly show all raw magnitude data
+    mid_mag_raw = mag_raw[int(T_SKIP*FS):int((time[-1]-T_SKIP)*FS)]
+    ym_raw = np.percentile(mid_mag_raw, [1, 99])
+    ax.set_ylim(ym_raw[0] - 0.2*(ym_raw[1]-ym_raw[0]), ym_raw[1] + 0.3*(ym_raw[1]-ym_raw[0]))
+    
+    # Secondary axis for detrended & notched magnitude - solid blue
+    ax_mag_sec = ax.twinx()
+    ax_mag_sec.plot(time, mag_preprocessed, 'b', alpha=0.8, lw=1.0, label='Preprocessed Magnitude (detrended & notched)')
+    ax_mag_sec.set_ylabel('Preprocessed Magnitude (a.u.)', color='b')
+    ax_mag_sec.tick_params(axis='y', labelcolor='b')
+    
+    # Auto-scale secondary axis to fit preprocessed magnitude
+    mid_mag_prep = mag_preprocessed[int(T_SKIP*FS):int((time[-1]-T_SKIP)*FS)]
+    ym_prep = np.percentile(mid_mag_prep, [1, 99])
+    ax_mag_sec.set_ylim(ym_prep[0] - 0.2*(ym_prep[1]-ym_prep[0]), ym_prep[1] + 0.3*(ym_prep[1]-ym_prep[0]))
+    
+    if on_s < off_s:
+        ax.axvspan(on_s, off_s, **yw, label=f'Koro Window ({dur:.1f}s)')
+        ax.axvline(on_s, color='red', ls='--', lw=2, label='SYS')
+        ax.axvline(off_s, color='blue', ls='--', lw=2, label='DIA')
+        
+    ax.set_title('1a. Magnitude: Raw vs. Preprocessed', fontweight='bold')
+    ax.set_xlabel('Time (s)'); ax.grid(True, alpha=0.3)
+    
+    # Combine legends
+    lines, labels = ax.get_legend_handles_labels()
+    lines_sec, labels_sec = ax_mag_sec.get_legend_handles_labels()
+    ax_mag_sec.legend(lines + lines_sec, labels + labels_sec, loc='upper right', fontsize=7)
+
+    ax = axes[0,1]
+    # Primary axis for Raw Wrapped Phase (strictly bounded within [-pi, pi])
+    phase_wrapped = np.angle(iq)
+    ax.plot(time[::100], phase_wrapped[::100], 'lightgreen', alpha=0.5, label='Raw Wrapped Phase ([-pi, pi])')
+    ax.set_ylabel('Raw Wrapped Phase (rad)', color='darkgreen')
+    ax.tick_params(axis='y', labelcolor='darkgreen')
+    ax.set_ylim(-np.pi - 0.2, np.pi + 0.2)
+    ax.grid(True, alpha=0.3)
+    
+    # Secondary axis for Detrended Phase (solid dark green)
+    ax_sec = ax.twinx()
+    ax_sec.plot(time, phase_clean, 'darkgreen', alpha=0.9, lw=1.2, label='Preprocessed Phase (CFO & drift removed)')
+    ax_sec.set_ylabel('Preprocessed Phase (rad)', color='g')
+    ax_sec.tick_params(axis='y', labelcolor='g')
+    
+    if on_s < off_s: ax.axvspan(on_s, off_s, **yw)
+    ax.set_title(f'1b. Phase: Raw Wrapped vs. Preprocessed (CFO {co_hz:.0f} Hz removed)', fontweight='bold')
+    ax.set_xlabel('Time (s)')
+    
+    # y-limits for preprocessed phase
+    ax_sec.set_ylim(-1.5, 2.0)
+    
+    # Combine legends
+    lines, labels = ax.get_legend_handles_labels()
+    lines2, labels2 = ax_sec.get_legend_handles_labels()
+    ax_sec.legend(lines + lines2, labels + labels2, loc='upper right', fontsize=7)
+
+    # Row 2: HR Phase Shift | Koro Phase Shift
+    ax = axes[1,0]
+    ax.plot(time, phase_hr, 'red', label='Phase Shift (0.5-3 Hz)')
+    ax.set_ylabel('Phase Shift (rad)', color='red')
+    ax.tick_params(axis='y', labelcolor='red')
+    ax.set_ylim(-ph_hr_lim, ph_hr_lim)
+    if on_s < off_s: ax.axvspan(on_s, off_s, **yw)
+    ax.set_title('2a. HR Phase Shift (0.5-3 Hz)', fontweight='bold')
+    ax.set_xlabel('Time (s)'); ax.legend(fontsize=7); ax.grid(True, alpha=0.3)
+
+    ax = axes[1,1]
+    ax.plot(time, phase_koro, 'darkred', label='Phase Shift (10-49 Hz)')
+    ax.set_ylabel('Phase Shift (rad)', color='darkred')
+    ax.tick_params(axis='y', labelcolor='darkred')
+    ax.set_ylim(-ph_koro_lim, ph_koro_lim)
+    if on_s < off_s: ax.axvspan(on_s, off_s, **yw)
+    ax.set_title('2b. Koro Phase Shift (10-49 Hz)', fontweight='bold')
+    ax.set_xlabel('Time (s)'); ax.legend(fontsize=7); ax.grid(True, alpha=0.3)
+
+    # Row 3: Normalized HR Velocity | Koro Velocity (Phase vs Magnitude)
+    ax = axes[2,0]
+    vel_hr_n = vel_hr / (np.max(np.abs(vel_hr))+1e-9)
+    vel_mag_hr_n = vel_mag_hr / (np.max(np.abs(vel_mag_hr))+1e-9)
+    ax.plot(time, vel_hr_n, 'blue', alpha=0.9, label='Phase Velocity HR')
+    if len(peaks) > 0:
+        ax.plot(time[peaks], vel_hr_n[peaks], 'ro', ms=5, label=f'Beats ({len(peaks)})')
+    ax.set_ylabel('Normalized Phase Velocity', color='blue')
+    ax.tick_params(axis='y', labelcolor='blue')
+    ax.set_ylim(-1.1, 1.1)
+    
+    # Secondary axis for Normalized Magnitude Velocity
+    ax_sec = ax.twinx()
+    ax_sec.plot(time, vel_mag_hr_n, 'royalblue', alpha=0.4, ls='--', label='Mag Velocity HR')
+    ax_sec.set_ylabel('Normalized Mag Velocity', color='royalblue')
+    ax_sec.tick_params(axis='y', labelcolor='royalblue')
+    ax_sec.set_ylim(-1.1, 1.1)
+    
+    if on_s < off_s: ax.axvspan(on_s, off_s, **yw)
+    ax.set_title('3a. Velocity HR (0.5-3 Hz) - Phase vs Magnitude', fontweight='bold')
+    ax.set_xlabel('Time (s)')
+    ax.grid(True, alpha=0.3)
+    
+    lines, labels = ax.get_legend_handles_labels()
+    lines2, labels2 = ax_sec.get_legend_handles_labels()
+    ax_sec.legend(lines + lines2, labels + labels2, loc='upper right', fontsize=7)
+
+    ax = axes[2,1]
+    ax.plot(time, vel_mag_koro, 'purple', alpha=0.9, label='Mag Velocity Koro')
+    ax.set_ylabel('Mag Velocity (a.u./s)', color='purple')
+    ax.tick_params(axis='y', labelcolor='purple')
+    if on_s < off_s:
+        io, ie = int(on_s*FS), int(off_s*FS)
+        vel_mag_koro_lim = max(0.1, np.percentile(np.abs(vel_mag_koro[io:ie]), 99.5) * 1.5)
+        ax.set_ylim(-vel_mag_koro_lim, vel_mag_koro_lim)
+    else:
+        ax.set_ylim(-1, 1)
+        
+    # Secondary axis for the noisy Phase Velocity
+    ax_sec = ax.twinx()
+    ax_sec.plot(time, vel_koro, 'darkred', alpha=0.3, ls='--', label='Phase Velocity Koro')
+    ax_sec.set_ylabel('Phase Velocity (mm/s)', color='darkred')
+    ax_sec.tick_params(axis='y', labelcolor='darkred')
+    ax_sec.set_ylim(-vel_koro_lim, vel_koro_lim)
+    
+    if on_s < off_s: ax.axvspan(on_s, off_s, **yw, label='Koro Window')
+    ax.set_title('3b. Velocity Koro (10-49 Hz) - Phase vs Magnitude', fontweight='bold')
+    ax.set_xlabel('Time (s)')
+    ax.grid(True, alpha=0.3)
+    
+    lines, labels = ax.get_legend_handles_labels()
+    lines2, labels2 = ax_sec.get_legend_handles_labels()
+    ax_sec.legend(lines + lines2, labels + labels2, loc='upper right', fontsize=7)
+
+    # Row 4: STFT HR | STFT Koro
+    ax = axes[3,0]
+    f1, t1, Z1 = signal.stft(disp_hr, fs=FS, nperseg=4096, noverlap=3840)
+    P1 = 10*np.log10(np.abs(Z1)**2+1e-20); m1=f1<=5.0
+    v1a, v1b = np.percentile(P1[m1], [30, 99.5])
+    im1 = ax.pcolormesh(t1, f1[m1], P1[m1], shading='gouraud', cmap='viridis', vmin=v1a, vmax=v1b)
+    if on_s < off_s:
+        ax.axvline(on_s, color='w', ls='--', lw=1.5)
+        ax.axvline(off_s, color='w', ls='--', lw=1.5)
+    ax.set_ylim(0, 5); ax.set_title('4a. STFT: HR Band (0.5-5 Hz)', fontweight='bold')
+    ax.set_ylabel('Frequency (Hz)'); ax.set_xlabel('Time (s)'); plt.colorbar(im1, ax=ax, label='dB')
+
+    ax = axes[3,1]
+    f2, t2, Z2 = signal.stft(disp_koro, fs=FS, nperseg=4096, noverlap=3840)
+    P2 = 10*np.log10(np.abs(Z2)**2+1e-20); m2=(f2>=8)&(f2<=60)
+    v2a, v2b = np.percentile(P2[m2], [30, 99.5])
+    im2 = ax.pcolormesh(t2, f2[m2], P2[m2], shading='gouraud', cmap='plasma', vmin=v2a, vmax=v2b)
+    if on_s < off_s:
+        ax.axvline(on_s, color='w', ls='--', lw=1.5)
+        ax.axvline(off_s, color='w', ls='--', lw=1.5)
+    ax.set_ylim(8, 60); ax.set_title('4b. STFT: Korotkoff Band (8-60 Hz)', fontweight='bold')
+    ax.set_ylabel('Frequency (Hz)'); ax.set_xlabel('Time (s)'); plt.colorbar(im2, ax=ax, label='dB')
+
+    # Row 5: Kurtosis
+    ax = axes[4,0]
+    ax.plot(time, sliding_kurtosis(vel_hr, int(FS*0.5)), 'purple')
+    if on_s < off_s: ax.axvspan(on_s, off_s, **yw, label='Koro Window')
+    ax.set_title('5a. Velocity HR Kurtosis', fontweight='bold'); ax.set_ylabel('Kurtosis'); ax.set_xlabel('Time (s)'); ax.legend(fontsize=7); ax.grid(True, alpha=0.3)
+
+    ax = axes[4,1]
+    ax.plot(time, sliding_kurtosis(vel_koro, int(FS*0.1)), 'purple')
+    if on_s < off_s: ax.axvspan(on_s, off_s, **yw, label='Koro Window')
+    ax.set_title('5b. Velocity Kurtosis', fontweight='bold'); ax.set_ylabel('Kurtosis'); ax.set_xlabel('Time (s)'); ax.legend(fontsize=7); ax.grid(True, alpha=0.3)
+
+    # Row 6: Energy Envelope | RMS Velocity Jitter (Phase vs Magnitude)
+    ax = axes[5,0]
+    ax.plot(time, sm_energy, 'teal', alpha=0.9, label='Phase Energy')
+    ax.axhline(eth, color='r', ls='--', label='Threshold')
+    ax.set_ylabel('Phase Energy ((mm/s)^2)', color='teal')
+    ax.tick_params(axis='y', labelcolor='teal')
+    
+    ax_sec = ax.twinx()
+    ax_sec.plot(time, sm_mag_energy, 'purple', alpha=0.7, ls='--', label='Mag Energy')
+    ax_sec.set_ylabel('Mag Energy ((a.u./s)^2)', color='purple')
+    ax_sec.tick_params(axis='y', labelcolor='purple')
+    
+    if on_s < off_s: ax.axvspan(on_s, off_s, **yw)
+    ax.set_title('6a. Korotkoff Energy Envelope (Phase vs Mag)', fontweight='bold')
+    ax.set_xlabel('Time (s)')
+    ax.grid(True, alpha=0.3)
+    
+    lines, labels = ax.get_legend_handles_labels()
+    lines2, labels2 = ax_sec.get_legend_handles_labels()
+    ax_sec.legend(lines + lines2, labels + labels2, loc='upper right', fontsize=7)
+
+    ax = axes[5,1]
+    ax.plot(time, sliding_rms(vel_koro, int(FS*0.1)), 'darkred', label='Velocity Jitter')
+    if on_s < off_s: ax.axvspan(on_s, off_s, **yw, label='Koro Window')
+    ax.set_title('6b. Velocity Jitter (RMS)', fontweight='bold'); ax.set_ylabel('RMS (mm/s)'); ax.set_xlabel('Time (s)'); ax.legend(fontsize=7); ax.grid(True, alpha=0.3)
+
+    # Row 7: TKEO | Velocity Change Rate
+    ax = axes[6,0]
+    ax.plot(time, vel_tkeo, 'teal', alpha=0.9, label='Phase TKEO')
+    ax.set_ylabel('Phase TKEO ((mm/s)^2)', color='teal')
+    ax.tick_params(axis='y', labelcolor='teal')
+    
+    ax_sec = ax.twinx()
+    ax_sec.plot(time, vel_mag_tkeo, 'purple', alpha=0.7, ls='--', label='Mag TKEO')
+    ax_sec.set_ylabel('Mag TKEO ((a.u./s)^2)', color='purple')
+    ax_sec.tick_params(axis='y', labelcolor='purple')
+    
+    if on_s < off_s: ax.axvspan(on_s, off_s, **yw)
+    ax.set_title('7a. TKEO Energy (Phase vs Mag)', fontweight='bold')
+    ax.set_xlabel('Time (s)')
+    ax.grid(True, alpha=0.3)
+    
+    lines, labels = ax.get_legend_handles_labels()
+    lines2, labels2 = ax_sec.get_legend_handles_labels()
+    ax_sec.legend(lines + lines2, labels + labels2, loc='upper right', fontsize=7)
+
+    ax = axes[6,1]
+    ax.plot(time, np.abs(np.diff(np.append(vel_koro, 0)))*FS, 'm', label='|d/dt(Vel Env)|')
+    if on_s < off_s: ax.axvspan(on_s, off_s, **yw, label='Koro Window')
+    ax.set_title('7b. Velocity Change Rate', fontweight='bold'); ax.set_ylabel('((mm/s)/s)'); ax.set_xlabel('Time (s)'); ax.legend(fontsize=7); ax.grid(True, alpha=0.3)
+
+    # Row 8: Full overlays
+    valid_z = slice(int(10*FS), int((time[-1]-10)*FS))
+    zhr = hr_mag / (np.max(np.abs(hr_mag[valid_z])) + 1e-9)
+    zvl = vel_koro / (np.max(np.abs(vel_koro[valid_z])) + 1e-9)
+    zvc = np.abs(np.diff(np.append(vel_koro, 0)))*FS
+    zvc = zvc / (np.max(np.abs(zvc[valid_z])) + 1e-9)
+
+    ax = axes[7,0]
+    ax.plot(time, zhr, 'k', lw=2, label='Heartbeat (0.5-3 Hz)')
+    ax.plot(time, zvl, 'r', alpha=0.7, label='Koro Snaps (10-49 Hz)')
+    if on_s < off_s: ax.axvspan(on_s, off_s, **yw, label='Koro Window')
+    ax.set_ylim(-1.5, 1.5)
+    ax.set_title('8a. Full Overlay: Heart vs Koro', fontweight='bold'); ax.set_ylabel('Normalized'); ax.set_xlabel('Time (s)'); ax.legend(fontsize=7); ax.grid(True, alpha=0.3)
+
+    ax = axes[7,1]
+    ax.plot(time, zhr, 'k', lw=2, label='Heartbeat (0.5-3 Hz)')
+    ax.plot(time, zvc, 'm', alpha=0.8, label='Vel Change Rate')
+    if on_s < off_s: ax.axvspan(on_s, off_s, **yw, label='Koro Window')
+    ax.set_ylim(-1.5, 1.5)
+    ax.set_title('8b. Full Overlay: Heart vs Vel Transitions', fontweight='bold'); ax.set_ylabel('Normalized'); ax.set_xlabel('Time (s)'); ax.legend(fontsize=7); ax.grid(True, alpha=0.3)
+
+    plt.suptitle("Korotkoff Dashboard v5c: Clean Phase + Derivation Chain + Dual-Band STFT", fontsize=22, fontweight='bold', y=0.93)
+    plt.savefig(OUTPUT_IMG, dpi=150, bbox_inches='tight')
+    
+    print(f"\nDashboard v5c generated successfully at: {OUTPUT_IMG}")
+    print(f"{'='*55}")
+    print(f"  Koro Window  : {on_s:.2f}s - {off_s:.2f}s ({dur:.1f}s)")
+    print(f"  Time HR      : {hr_bpm_t:.1f} BPM ({len(peaks)} beats)")
+    print(f"  Freq HR      : {hr_bpm_f:.1f} BPM")
+    print(f"  Koro SNR     : {snr_db:.1f} dB")
+    idx_def = int(23.0 * FS)
+    print(f"  Deflation Phase Clean max: {np.max(np.abs(phase_clean[idx_def:])):.4f} rad")
+    print(f"  Deflation Phase HR max  : {np.max(np.abs(phase_hr[idx_def:])):.4f} rad")
+    print(f"  Deflation Disp HR max   : {np.max(np.abs(disp_hr[idx_def:])):.2f} um")
+    print(f"  Deflation Phase Koro max: {np.max(np.abs(phase_koro[idx_def:])):.4f} rad")
+    print(f"  Deflation Disp Koro max : {np.max(np.abs(disp_koro[idx_def:])):.2f} um")
+    print(f"{'='*55}")
+
+if __name__ == '__main__':
+    run()

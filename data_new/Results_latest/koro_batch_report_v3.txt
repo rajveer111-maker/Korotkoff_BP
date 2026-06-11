@@ -1,0 +1,215 @@
+BATCH ANALYSIS SUMMARY v3.0
+====================================================
+Sessions Processed: 20 / 20
+
+-- Sub_1_Prof_kan_Session_1 --
+  RF Window   : 34.50s – 45.25s (10.8s)
+  Steth Window: 8.75s – 18.75s (10.0s)
+  IoU (raw/corr): 0.000 / 0.813
+  Confidence  : 0.444 [VERY LOW]
+  K-Sounds    : 0
+  HR (RF)     : 47 BPM
+  SNR         : 22.3 dB
+  Onset 95%CI : [11.06, 11.06]s
+
+-- Sub_1_Prof_kan_Session_2 --
+  RF Window   : 34.62s – 45.12s (10.5s)
+  Steth Window: 9.25s – 19.25s (10.0s)
+  IoU (raw/corr): 0.000 / 0.821
+  Confidence  : 0.446 [VERY LOW]
+  K-Sounds    : 1
+  HR (RF)     : 56 BPM
+  SNR         : 15.5 dB
+  Onset 95%CI : [10.76, 10.76]s
+
+-- Sub_1_Prof_kan_Session_3 --
+  RF Window   : 14.88s – 25.62s (10.8s)
+  Steth Window: 8.25s – 18.25s (10.0s)
+  IoU (raw/corr): 0.194 / 0.000
+  Confidence  : 0.200 [VERY LOW]
+  K-Sounds    : 1
+  HR (RF)     : 58 BPM
+  SNR         : 14.6 dB
+  Onset 95%CI : [10.64, 10.64]s
+
+-- Sub_1_Prof_kan_Session_4 --
+  RF Window   : 16.97s – 25.17s (8.2s)
+  Steth Window: 8.00s – 18.50s (10.5s)
+  IoU (raw/corr): 0.089 / 0.072
+  Confidence  : 0.222 [VERY LOW]
+  K-Sounds    : 1
+  HR (RF)     : 58 BPM
+  SNR         : 16.6 dB
+  Onset 95%CI : [10.27, 10.27]s
+
+-- Sub_1_Prof_kan_Session_5 --
+  RF Window   : 15.43s – 29.06s (13.6s)
+  Steth Window: 9.25s – 19.75s (10.5s)
+  IoU (raw/corr): 0.218 / 0.671
+  Confidence  : 0.401 [VERY LOW]
+  K-Sounds    : 1
+  HR (RF)     : 51 BPM
+  SNR         : 17.0 dB
+  Onset 95%CI : [10.85, 10.85]s
+
+-- Sub_1_Prof_kan_Session_6 --
+  RF Window   : 31.88s – 42.88s (11.0s)
+  Steth Window: 8.25s – 18.25s (10.0s)
+  IoU (raw/corr): 0.000 / 0.231
+  Confidence  : 0.269 [VERY LOW]
+  K-Sounds    : 1
+  HR (RF)     : 66 BPM
+  SNR         : 14.6 dB
+  Onset 95%CI : [11.53, 11.54]s
+
+-- Sub_1_Prof_kan_Session_7 --
+  RF Window   : 17.38s – 28.12s (10.8s)
+  Steth Window: 9.75s – 19.75s (10.0s)
+  IoU (raw/corr): 0.129 / 0.000
+  Confidence  : 0.200 [VERY LOW]
+  K-Sounds    : 2
+  HR (RF)     : 61 BPM
+  SNR         : 15.9 dB
+  Onset 95%CI : [13.55, 13.55]s
+
+-- Sub_1_Prof_kan_Session_8 --
+  RF Window   : 31.62s – 42.38s (10.8s)
+  Steth Window: 11.50s – 21.50s (10.0s)
+  IoU (raw/corr): 0.000 / 0.425
+  Confidence  : 0.327 [VERY LOW]
+  K-Sounds    : 0
+  HR (RF)     : 55 BPM
+  SNR         : 17.6 dB
+  Onset 95%CI : [14.32, 14.32]s
+
+-- Sub_1_Prof_kan_Session_9 --
+  RF Window   : 18.71s – 28.00s (9.3s)
+  Steth Window: 8.75s – 18.75s (10.0s)
+  IoU (raw/corr): 0.002 / 0.239
+  Confidence  : 0.272 [VERY LOW]
+  K-Sounds    : 0
+  HR (RF)     : 51 BPM
+  SNR         : 15.8 dB
+  Onset 95%CI : [14.46, 14.46]s
+
+-- Sub_1_Prof_kan_Session_10 --
+  RF Window   : 22.99s – 40.12s (17.1s)
+  Steth Window: 9.50s – 20.00s (10.5s)
+  IoU (raw/corr): 0.000 / 0.613
+  Confidence  : 0.384 [VERY LOW]
+  K-Sounds    : 0
+  HR (RF)     : 48 BPM
+  SNR         : 16.2 dB
+  Onset 95%CI : [12.24, 12.24]s
+
+-- Sub_2_Rajveer_Session_1 --
+  RF Window   : 16.75s – 26.75s (10.0s)
+  Steth Window: 11.50s – 21.50s (10.0s)
+  IoU (raw/corr): 0.311 / 0.643
+  Confidence  : 0.393 [VERY LOW]
+  K-Sounds    : 1
+  HR (RF)     : 57 BPM
+  SNR         : 13.8 dB
+  Onset 95%CI : [8.95, 8.96]s
+
+-- Sub_2_Rajveer_Session_2 --
+  RF Window   : 32.50s – 43.00s (10.5s)
+  Steth Window: 8.75s – 18.75s (10.0s)
+  IoU (raw/corr): 0.000 / 0.574
+  Confidence  : 0.372 [VERY LOW]
+  K-Sounds    : 1
+  HR (RF)     : 52 BPM
+  SNR         : 17.2 dB
+  Onset 95%CI : [13.07, 13.07]s
+
+-- Sub_2_Rajveer_Session_3 --
+  RF Window   : 30.25s – 41.00s (10.8s)
+  Steth Window: 8.00s – 18.00s (10.0s)
+  IoU (raw/corr): 0.000 / 0.565
+  Confidence  : 0.370 [VERY LOW]
+  K-Sounds    : 0
+  HR (RF)     : 51 BPM
+  SNR         : 20.4 dB
+  Onset 95%CI : [14.06, 14.06]s
+
+-- Sub_2_Rajveer_Session_4 --
+  RF Window   : 10.70s – 22.14s (11.4s)
+  Steth Window: 8.50s – 18.50s (10.0s)
+  IoU (raw/corr): 0.572 / 0.628
+  Confidence  : 0.455 [LOW]
+  K-Sounds    : 1
+  HR (RF)     : 56 BPM
+  SNR         : 21.2 dB
+  Onset 95%CI : [10.78, 10.78]s
+
+-- Sub_2_Rajveer_Session_5 --
+  RF Window   : 35.75s – 46.62s (10.9s)
+  Steth Window: 14.50s – 24.50s (10.0s)
+  IoU (raw/corr): 0.000 / 0.463
+  Confidence  : 0.373 [VERY LOW]
+  K-Sounds    : 1
+  HR (RF)     : 64 BPM
+  SNR         : 18.0 dB
+  Onset 95%CI : [15.55, 15.55]s
+
+-- Sub_2_Rajveer_Session_6 --
+  RF Window   : 13.38s – 25.99s (12.6s)
+  Steth Window: 12.25s – 22.25s (10.0s)
+  IoU (raw/corr): 0.645 / 0.500
+  Confidence  : 0.506 [LOW]
+  K-Sounds    : 6
+  HR (RF)     : 52 BPM
+  SNR         : 14.7 dB
+  Onset 95%CI : [8.69, 12.49]s
+
+-- Sub_2_Rajveer_Session_7 --
+  RF Window   : 12.97s – 24.56s (11.6s)
+  Steth Window: 10.25s – 20.75s (10.5s)
+  IoU (raw/corr): 0.544 / 0.534
+  Confidence  : 0.384 [VERY LOW]
+  K-Sounds    : 1
+  HR (RF)     : 55 BPM
+  SNR         : 17.6 dB
+  Onset 95%CI : [13.10, 13.10]s
+
+-- Sub_2_Rajveer_Session_8 --
+  RF Window   : 15.50s – 25.50s (10.0s)
+  Steth Window: 9.25s – 19.75s (10.5s)
+  IoU (raw/corr): 0.262 / 0.000
+  Confidence  : 0.200 [VERY LOW]
+  K-Sounds    : 0
+  HR (RF)     : 59 BPM
+  SNR         : 12.9 dB
+  Onset 95%CI : [8.23, 8.23]s
+
+-- Sub_2_Rajveer_Session_9 --
+  RF Window   : 33.00s – 44.00s (11.0s)
+  Steth Window: 13.50s – 24.00s (10.5s)
+  IoU (raw/corr): 0.000 / 0.401
+  Confidence  : 0.359 [VERY LOW]
+  K-Sounds    : 0
+  HR (RF)     : 63 BPM
+  SNR         : 16.2 dB
+  Onset 95%CI : [15.92, 15.93]s
+
+-- Sub_2_Rajveer_Session_10 --
+  RF Window   : 27.12s – 37.62s (10.5s)
+  Steth Window: 12.50s – 22.50s (10.0s)
+  IoU (raw/corr): 0.000 / 0.000
+  Confidence  : 0.227 [VERY LOW]
+  K-Sounds    : 0
+  HR (RF)     : 58 BPM
+  SNR         : 14.8 dB
+  Onset 95%CI : [14.87, 14.87]s
+
+====================================================
+AGGREGATE STATISTICS:
+  Mean RF Duration : 11.1 ± 1.8 s
+  Mean K-Sounds    : 0.9 ± 1.3
+  Mean SNR         : 16.6 ± 2.4 dB
+  Mean HR          : 56 ± 5.1 BPM
+  Mean Raw IoU     : 0.148 ± 0.209
+  Mean Corr IoU    : 0.410 ± 0.271
+  Mean Confidence  : 0.340 ± 0.093
+  IoU Improvement  : +0.261 (lag correction)
+====================================================

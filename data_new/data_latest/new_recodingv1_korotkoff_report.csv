@@ -1,0 +1,2 @@
+file,koro_onset_s,koro_offset_s,koro_duration_s,hr_bpm_peaks,hr_bpm_psd,hr_consistent,rr_std_ms,koro_snr_db,clip_pct,spectral_centroid,quality
+new_recodingv1.mp4,5.772,14.723,8.95,72.84,138.0,False,284.98,33.59,0.004,142.54,REVIEW

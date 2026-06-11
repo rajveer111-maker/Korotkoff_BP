@@ -1,0 +1,85 @@
+===========================================================
+        ADVANCED ML PIPELINE KOROTKOFF REPORT v1.0
+===========================================================
+Sessions Processed: 20 / 20
+
+COMPARATIVE PERFORMANCE ANALYSIS (MEAN +/- SD):
+-----------------------------------------------------------
+Heuristic Baseline (v3.0):
+  Mean Raw IoU       : 0.1483 +/- 0.2145
+  Mean Lag-Corr IoU  : 0.4096 +/- 0.2780
+  Mean Onset MAE     : 15.670 seconds
+  Mean Offset MAE    : 17.080 seconds
+  Mean Duration Error: 3.040 seconds
+
+Model 1: Random Forest Classifier (Classical ML):
+  Mean Raw IoU       : 0.1736 +/- 0.2287
+  Mean Lag-Corr IoU  : 0.1945 +/- 0.2263
+  Mean Onset MAE     : 12.860 seconds
+  Mean Offset MAE    : 10.080 seconds
+  Mean Pointwise F1  : 0.3221 +/- 0.1689
+  Mean Pointwise AUC : 0.7094 +/- 0.1141
+  Mean Duration Error: 7.700 seconds
+
+Model 2: PyTorch 1D CNN-BiLSTM Model (Deep Learning):
+  Mean Raw IoU       : 0.3596 +/- 0.3976
+  Mean Lag-Corr IoU  : 0.2526 +/- 0.2406
+  Mean Onset MAE     : 15.670 seconds
+  Mean Offset MAE    : 9.925 seconds
+  Mean Pointwise F1  : 0.2559 +/- 0.2128
+  Mean Pointwise AUC : 0.6193 +/- 0.2594
+  Mean Duration Error: 14.715 seconds
+
+LOSO FOLD EVALUATION STATS & DURATION CONFIRMATION PER SUBJECT:
+-----------------------------------------------------------
+Subject 'Sub_1_Prof_kan' Summary:
+  Heuristic Lag-Corr IoU  : 0.3885 +/- 0.3245
+  Random Forest IoU       : 0.2034 +/- 0.2714
+  CNN-BiLSTM DL IoU       : 0.1558 +/- 0.1314
+  CNN-BiLSTM Onset MAE    : 23.430s
+  CNN-BiLSTM Offset MAE   : 12.470s
+  Mean True Korotkoff Dur : 11.44 +/- 3.43s
+  Mean Heuristic Dur      : 10.00 +/- 0.00s
+  Mean Random Forest Dur  : 17.42 +/- 7.38s
+  Mean CNN-BiLSTM Dur     : 30.66 +/- 18.76s
+
+  Per-Session Duration Details for 'Sub_1_Prof_kan':
+    Session Name                 | True Dur | Heur Dur | RF Dur   | DL Dur  
+    --------------------------------------------------------------------
+    Sub_1_Prof_kan_Session_1     |    11.80s |    10.00s |    18.10s |    33.60s
+    Sub_1_Prof_kan_Session_10    |     4.40s |    10.00s |    31.90s |    47.40s
+    Sub_1_Prof_kan_Session_2     |    12.40s |    10.00s |    19.20s |    51.20s
+    Sub_1_Prof_kan_Session_3     |    10.40s |    10.00s |    22.40s |     4.10s
+    Sub_1_Prof_kan_Session_4     |    11.80s |    10.00s |    14.10s |    46.70s
+    Sub_1_Prof_kan_Session_5     |    18.70s |    10.00s |    18.10s |     5.60s
+    Sub_1_Prof_kan_Session_6     |    10.60s |    10.00s |    14.20s |    44.60s
+    Sub_1_Prof_kan_Session_7     |    10.70s |    10.00s |    12.00s |    17.50s
+    Sub_1_Prof_kan_Session_8     |    12.00s |    10.00s |     3.60s |    43.50s
+    Sub_1_Prof_kan_Session_9     |    11.60s |    10.00s |    20.60s |    12.40s
+
+Subject 'Sub_2_Rajveer' Summary:
+  Heuristic Lag-Corr IoU  : 0.4308 +/- 0.2383
+  Random Forest IoU       : 0.1857 +/- 0.1850
+  CNN-BiLSTM DL IoU       : 0.3493 +/- 0.2901
+  CNN-BiLSTM Onset MAE    : 7.910s
+  CNN-BiLSTM Offset MAE   : 7.380s
+  Mean True Korotkoff Dur : 13.52 +/- 8.40s
+  Mean Heuristic Dur      : 10.00 +/- 0.00s
+  Mean Random Forest Dur  : 6.56 +/- 5.26s
+  Mean CNN-BiLSTM Dur     : 7.19 +/- 3.20s
+
+  Per-Session Duration Details for 'Sub_2_Rajveer':
+    Session Name                 | True Dur | Heur Dur | RF Dur   | DL Dur  
+    --------------------------------------------------------------------
+    Sub_2_Rajveer_Session_1      |    10.60s |    10.00s |     2.90s |    10.00s
+    Sub_2_Rajveer_Session_10     |    10.30s |    10.00s |     7.60s |     1.50s
+    Sub_2_Rajveer_Session_2      |    11.00s |    10.00s |     2.50s |     5.30s
+    Sub_2_Rajveer_Session_3      |    10.60s |    10.00s |     2.70s |     4.20s
+    Sub_2_Rajveer_Session_4      |    10.70s |    10.00s |    10.10s |    10.00s
+    Sub_2_Rajveer_Session_5      |    10.80s |    10.00s |     3.50s |     6.40s
+    Sub_2_Rajveer_Session_6      |    37.40s |    10.00s |    15.70s |    10.00s
+    Sub_2_Rajveer_Session_7      |    11.40s |    10.00s |    14.70s |    10.00s
+    Sub_2_Rajveer_Session_8      |    11.30s |    10.00s |     1.30s |    10.00s
+    Sub_2_Rajveer_Session_9      |    11.10s |    10.00s |     4.60s |     4.50s
+
+===========================================================

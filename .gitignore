@@ -1,0 +1,13 @@
+# Environments
+bioview_env/
+venv/
+.env
+__pycache__/
+*.pyc
+
+# Big executables
+uhd_4.9.0.0-release_Win64_VS2019.exe
+
+# OS generated files
+.DS_Store
+Thumbs.db

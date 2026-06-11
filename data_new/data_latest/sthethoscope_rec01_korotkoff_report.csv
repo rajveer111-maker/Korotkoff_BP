@@ -1,0 +1,2 @@
+file,koro_onset_s,koro_offset_s,koro_duration_s,hr_bpm_peaks,hr_bpm_psd,hr_consistent,rr_std_ms,koro_snr_db,clip_pct,spectral_centroid,quality
+sthethoscope_rec01.mp4,11.328,21.221,9.894,64.88,132.0,False,89.6,27.27,0.0,142.6,REVIEW
