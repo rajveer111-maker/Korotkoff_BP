@@ -88,13 +88,13 @@ def run(sub_select):
         1: dict(name='Subject 1 (Prof. Kan)', rec='Rec 06',
                 rf=os.path.join(BASE,'Sub_1_Prof_kan','Rec_6.h5'),
                 wav=os.path.join(BASE,'Sub_1_Prof_kan','sthethoscope_rec06.wav'),
-                out=os.path.join(BASE,'korotkoff_contrast_Sub1.png'),
+                out=r'd:\Bioview\My_RF_work_v1\data_new\RMG_Paper_Results\figures\supplementary\korotkoff_contrast_Sub1.png',
                 k_on=27.75, k_off=43.50, defl=18.3, t_max=52.0, lag=1.7083,
                 notches=[100.71,201.43,302.14,402.86]),
         2: dict(name='Subject 2 (Rajveer)', rec='Rec 04',
                 rf=os.path.join(BASE,'Sub_2_Rajveer','Rec_4.h5'),
                 wav=os.path.join(BASE,'Sub_2_Rajveer','sthethoscope_rec04.wav'),
-                out=os.path.join(BASE,'korotkoff_contrast_Sub2.png'),
+                out=r'd:\Bioview\My_RF_work_v1\data_new\RMG_Paper_Results\figures\supplementary\korotkoff_contrast_Sub2.png',
                 k_on=27.375, k_off=42.00, defl=18.6, t_max=51.0, lag=2.6042,
                 notches=[50.0,64.0,100.6,201.2]),
     }
@@ -117,9 +117,9 @@ def run(sub_select):
     phi = notch_chain(phi, c['notches'], FS)
     mag = notch_chain(mag, c['notches'], FS)
 
-    # Korotkoff band 30-180 Hz velocity
-    phi_vk = np.append(np.diff(bpf(phi,30,180,FS))*FS, 0)*SCALE
-    mag_vk = np.append(np.diff(bpf(mag,30,180,FS))*FS, 0)
+    # Optimized bands: Phase 30-80 Hz velocity, Magnitude 20-50 Hz velocity
+    phi_vk = np.append(np.diff(bpf(phi,30,80,FS))*FS, 0)*SCALE
+    mag_vk = np.append(np.diff(bpf(mag,20,50,FS))*FS, 0)
     t_rf   = np.arange(len(phi_vk))/FS
 
     # Decimate to 1kHz
@@ -170,7 +170,8 @@ def run(sub_select):
     steth_n = np.clip((aud_env-b_a)/(np.max(aud_env[mk_a])+1e-12),0,None)
 
     # ---- Quiet vs Korotkoff windows (TKEO energy) ---------------------------
-    t_qs, t_qe = k_on-5.0, k_on-0.5
+    # Use post-deflation recovery window (k_off + 2.0 to k_off + 7.0) as quiet baseline
+    t_qs, t_qe = k_off+2.0, k_off+7.0
     t_ks, t_ke = k_on+1.0, k_on+6.0
     mq = (t_ds>=t_qs)&(t_ds<=t_qe)
     mk2= (t_ds>=t_ks)&(t_ds<=t_ke)
@@ -187,8 +188,8 @@ def run(sub_select):
     ratio_m = p95_mk/(p95_mq+1e-12)
     ratio_p = p95_pk/(p95_pq+1e-12)
 
-    print(f"  Mag P95-burst: Quiet={p95_mq:.5f}  Koro={p95_mk:.5f}  Ratio={ratio_m:.1f}x")
-    print(f"  Phi P95-burst: Quiet={p95_pq:.4f}  Koro={p95_pk:.4f}  Ratio={ratio_p:.1f}x")
+    print(f"  Mag P95-burst: Quiet(Recovery)={p95_mq:.5f}  Koro={p95_mk:.5f}  Ratio={ratio_m:.2f}x")
+    print(f"  Phi P95-burst: Quiet(Recovery)={p95_pq:.4f}  Koro={p95_pk:.4f}  Ratio={ratio_p:.2f}x")
 
     # Kurtosis
     def kurt(x): return float(np.mean(((x-np.mean(x))/(np.std(x)+1e-12))**4))
@@ -209,7 +210,7 @@ def run(sub_select):
     mv = mag_ds/(np.std(mag_ds)+1e-12)
     ax.plot(t_ds, mv, color=CM, lw=0.35, alpha=0.55, rasterized=True)
     ax.set_ylim(-6,6)
-    ax.set_title('(A) RF Magnitude Velocity 30-180 Hz  [full recording]\nRaw amplitude LOOKS similar in both regions')
+    ax.set_title('(A) RF Magnitude Velocity 20-50 Hz  [full recording]\nRaw amplitude LOOKS similar in both regions')
     ax.set_xlabel('Time (s)'); ax.set_ylabel('Amplitude (sigma)')
     ax.text(k_on+0.5, 5.2, 'Korotkoff\nWindow', color='#F39C12', fontsize=9, fontweight='bold', zorder=5)
 
@@ -218,7 +219,7 @@ def run(sub_select):
     pv = phi_ds/(np.std(phi_ds)+1e-12)
     ax.plot(t_ds, pv, color=CP, lw=0.35, alpha=0.55, rasterized=True)
     ax.set_ylim(-6,6)
-    ax.set_title('(B) RF Phase Velocity 30-180 Hz  [full recording]\nRaw amplitude LOOKS similar in both regions')
+    ax.set_title('(B) RF Phase Velocity 30-80 Hz  [full recording]\nRaw amplitude LOOKS similar in both regions')
     ax.set_xlabel('Time (s)'); ax.set_ylabel('Amplitude (sigma)')
     ax.text(k_on+0.5, 5.2, 'Korotkoff\nWindow', color='#F39C12', fontsize=9, fontweight='bold', zorder=5)
 
@@ -275,30 +276,30 @@ def run(sub_select):
     s_p  = np.percentile(pq_tk,99)+1e-12
 
     ax = fig.add_subplot(gs[3,0])
-    ax.fill_between(t_qw, 0, mq_tk/s_m, color='#888', alpha=0.55, label=f'Quiet  P95={p95_mq:.5f}')
-    ax.fill_between(t_kw, 0, mk_tk/s_m, color=CM,    alpha=0.65, label=f'Korotkoff  P95={p95_mk:.5f}')
-    ax.set_title(f'(G) RF Mag TKEO Burst Energy  5s window comparison\nKorotkoff clicks are {ratio_m:.1f}x higher energy (P95)')
+    ax.fill_between(t_qw, 0, mq_tk/s_m, color='#888', alpha=0.55, label=f'Recovery Baseline  P95={p95_mq:.5f}')
+    ax.fill_between(t_kw, 0, mk_tk/s_m, color=CM,    alpha=0.65, label=f'Korotkoff Active  P95={p95_mk:.5f}')
+    ax.set_title(f'(G) RF Mag TKEO Burst Energy  5s window comparison\nKorotkoff clicks are {ratio_m:.2f}x higher energy (P95)')
     ax.set_xlabel('Relative Time (s)'); ax.set_ylabel('Norm. TKEO Burst Energy')
     ax.legend(frameon=False)
 
     ax = fig.add_subplot(gs[3,1])
-    ax.fill_between(t_qw, 0, pq_tk/s_p, color='#888', alpha=0.55, label=f'Quiet  P95={p95_pq:.1f}')
-    ax.fill_between(t_kw, 0, pk_tk/s_p, color=CP,    alpha=0.65, label=f'Korotkoff  P95={p95_pk:.1f}')
-    ax.set_title(f'(H) RF Phase TKEO Burst Energy  5s window comparison\nKorotkoff clicks are {ratio_p:.1f}x higher energy (P95)')
+    ax.fill_between(t_qw, 0, pq_tk/s_p, color='#888', alpha=0.55, label=f'Recovery Baseline  P95={p95_pq:.4f}')
+    ax.fill_between(t_kw, 0, pk_tk/s_p, color=CP,    alpha=0.65, label=f'Korotkoff Active  P95={p95_pk:.4f}')
+    ax.set_title(f'(H) RF Phase TKEO Burst Energy  5s window comparison\nKorotkoff clicks are {ratio_p:.2f}x higher energy (P95)')
     ax.set_xlabel('Relative Time (s)'); ax.set_ylabel('Norm. TKEO Burst Energy')
     ax.legend(frameon=False)
 
     # ROW 4: Amplitude histogram (TKEO energy) - shows heavy tail in Korotkoff
     bins = np.linspace(0, 1, 80)
     ax = fig.add_subplot(gs[4,0])
-    ax.hist(mq_tk/s_m, bins=bins, color='#999', alpha=0.55, density=True, label='Quiet pre-Korotkoff')
+    ax.hist(mq_tk/s_m, bins=bins, color='#999', alpha=0.55, density=True, label='Quiet recovery baseline')
     ax.hist(mk_tk/s_m, bins=bins, color=CM,    alpha=0.55, density=True, label='Korotkoff active')
     ax.set_title(f'(I) RF Magnitude TKEO  Energy Distribution\nKurtosis: Quiet={km_q:.0f}  Korotkoff={km_k:.0f}  [higher=more clicks]')
     ax.set_xlabel('Norm. Burst Energy'); ax.set_ylabel('Probability Density')
     ax.legend(frameon=False)
 
     ax = fig.add_subplot(gs[4,1])
-    ax.hist(pq_tk/s_p, bins=bins, color='#999', alpha=0.55, density=True, label='Quiet pre-Korotkoff')
+    ax.hist(pq_tk/s_p, bins=bins, color='#999', alpha=0.55, density=True, label='Quiet recovery baseline')
     ax.hist(pk_tk/s_p, bins=bins, color=CP,    alpha=0.55, density=True, label='Korotkoff active')
     ax.set_title(f'(J) RF Phase TKEO  Energy Distribution\nKurtosis: Quiet={kp_q:.0f}  Korotkoff={kp_k:.0f}  [higher=more clicks]')
     ax.set_xlabel('Norm. Burst Energy'); ax.set_ylabel('Probability Density')
@@ -320,6 +321,7 @@ def run(sub_select):
     ax.set_title(f'(K) RF Fused vs GT Stethoscope  [{len(beats)} Korotkoff beats detected]\n'
                  'Vertical lines = detected cardiac pulses inside Korotkoff window')
     ax.set_xlabel('Time (s)'); ax.set_ylabel('Normalised Energy')
+    ax.set_ylim(-0.05, 1.25)
     ax.legend(frameon=False, ncol=3)
 
     fig.suptitle(

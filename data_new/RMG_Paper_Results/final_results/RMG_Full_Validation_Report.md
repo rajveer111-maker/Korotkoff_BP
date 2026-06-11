@@ -284,7 +284,7 @@ PSD of the Magnitude velocity (Panel I) and Phase velocity (Panel J) in two wind
 
 ### How These Figures Were Made
 
-A 6×2 panel figure is generated per subject. It systematically compares the RF signal during two periods: **Quiet** (5 s window just before Korotkoff onset) vs **Korotkoff** (5 s window just inside the Korotkoff window). Multiple analysis lenses are applied to reveal where the difference lies.
+A 6×2 panel figure is generated per subject. It systematically compares the RF signal during two periods: **Quiet Recovery** (5 s post-deflation recovery window, where cuff pressure is 0) vs **Korotkoff** (5 s window just inside the Korotkoff active window). Multiple analysis lenses are applied to reveal where the difference lies.
 
 ### What Each Panel Shows and What We Find
 
@@ -296,13 +296,13 @@ The full-recording normalised Korotkoff velocity for Magnitude (blue) and Phase 
 
 **Panels C & D — Rolling Energy (0.3 s window, dB)**
 
-The short-term energy (0.3 s sliding window, log-scale dB) is plotted for each channel. A horizontal dashed line marks the pre-Korotkoff baseline energy level.
+The short-term energy (0.3 s sliding window, log-scale dB) is plotted for each channel. A horizontal dashed line marks the recovery baseline energy level.
 
 - *Finding:* The energy level is **visibly elevated inside the Korotkoff window** compared to outside, with the shaded region showing the energy excess. The Korotkoff window rises 3–8 dB above baseline. This is the first reliable distinguishing feature: the region has higher average energy density, even though individual amplitude peaks look similar.
 
 **Panels E — Energy Rise Above Baseline (dB)**
 
-The instantaneous dB rise above the pre-Korotkoff baseline is plotted for both channels simultaneously (Magnitude blue fill, Phase red overlay).
+The instantaneous dB rise above the recovery baseline is plotted for both channels simultaneously (Magnitude blue fill, Phase red overlay).
 
 - *Finding:* Both channels show consistent positive energy elevation within the Korotkoff window and near-zero rise outside. The +6 dB marker line shows that the Korotkoff window frequently exceeds this threshold while the quiet region does not. This panel directly supports a simple energy-ratio-based onset/offset detector.
 
@@ -319,23 +319,23 @@ Algorithm:
 
 - *Finding:* The CUSUM statistic **remains flat** during the quiet pre-deflation period, then **rises sharply and monotonically** starting at exactly the Korotkoff onset (`k_on`). It plateaus at the Korotkoff offset (`k_off`) and remains flat after. This is the most reliable automated onset/offset indicator found in this analysis — no manual annotation is required. The GT stethoscope CUSUM tracks the RF CUSUM closely, confirming both sensors detect the same change point.
 
-**Panels G & H — TKEO Burst Energy: Quiet vs Korotkoff (5 s zoom)**
+**Panels G & H — TKEO Burst Energy: Recovery Baseline vs Korotkoff (5 s zoom)**
 
-The short-TKEO (50 ms window) energy is shown as filled area plots for the quiet window (grey) and the Korotkoff window (colour). The 95th-percentile (P95) energy and burst-energy ratio are annotated on each panel.
+The short-TKEO (50 ms window) energy is shown as filled area plots for the quiet recovery window (grey) and the Korotkoff window (colour). The 95th-percentile (P95) energy and burst-energy ratio are annotated on each panel.
 
-- *Finding:* The Korotkoff TKEO burst energy at P95 is **3–6× higher** than in the quiet region. This confirms that Korotkoff events are brief, intense bursts — not a sustained amplitude increase. The difference is invisible in simple RMS but becomes clear with TKEO's instantaneous energy sensitivity.
+- *Finding:* The Korotkoff TKEO burst energy at P95 is **1.3–2.1× higher** than in the recovery region (specifically **2.12x for Subject 1** and **1.91x for Subject 2** in the Phase channel, and **1.31x and 1.45x** respectively in the Magnitude channel). This confirms that Korotkoff events are brief, intense bursts — not a sustained amplitude increase. The difference is invisible in simple RMS but becomes clear with TKEO's instantaneous energy sensitivity.
 
 **Panels I & J — TKEO Energy Distribution (Histogram)**
 
-Histograms of the TKEO burst energy in the quiet (grey) vs Korotkoff (colour) windows.
+Histograms of the TKEO burst energy in the quiet recovery baseline (grey) vs Korotkoff (colour) windows.
 
-- *Finding:* The Korotkoff histogram has a **heavier right tail** and higher **kurtosis** than the quiet histogram. Higher kurtosis means more extreme values — consistent with brief, strong arterial snap events interspersed with quiet inter-beat intervals. The quiet region histogram is narrower and more Gaussian. This distributional difference can be used as a statistical feature for machine learning classification.
+- *Finding:* The Korotkoff histogram has a **heavier right tail** and higher **kurtosis** than the quiet histogram. Higher kurtosis means more extreme values — consistent with brief, strong arterial snap events interspersed with quiet recovery intervals. The quiet region histogram is narrower and more Gaussian. This distributional difference can be used as a statistical feature for machine learning classification.
 
 **Panel K — Fused RF Beat Detection vs GT (Full Width)**
 
 The fused TKEO envelope overlaid with the GT stethoscope envelope and detected beat markers.
 
-- *Finding:* This summary panel confirms end-to-end detection performance. The green vertical markers (RF detected beats) align closely with the GT peaks, and the envelope shapes are highly correlated within the Korotkoff window.
+- *Finding:* This summary panel confirms end-to-end detection performance. The green vertical markers (RF detected beats) align closely with the GT peaks, and the envelope shapes are highly correlated within the Korotkoff window. The y-axis is limited to [-0.05, 1.25] to focus on the normalized physiological beats and suppress transient artifacts outside the window.
 
 ---
 
