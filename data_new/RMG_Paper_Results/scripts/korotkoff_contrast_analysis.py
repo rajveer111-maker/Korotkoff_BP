@@ -188,8 +188,8 @@ def run(sub_select):
     ratio_m = p95_mk/(p95_mq+1e-12)
     ratio_p = p95_pk/(p95_pq+1e-12)
 
-    print(f"  Mag P95-burst: Quiet(Recovery)={p95_mq:.5f}  Koro={p95_mk:.5f}  Ratio={ratio_m:.2f}x")
-    print(f"  Phi P95-burst: Quiet(Recovery)={p95_pq:.4f}  Koro={p95_pk:.4f}  Ratio={ratio_p:.2f}x")
+    print(f"  Mag P95-burst: Quiet(Recovery)={p95_mq:.2e}  Koro={p95_mk:.2e}  Ratio={ratio_m:.2f}x")
+    print(f"  Phi P95-burst: Quiet(Recovery)={p95_pq:.2f}  Koro={p95_pk:.2f}  Ratio={ratio_p:.2f}x")
 
     # Kurtosis
     def kurt(x): return float(np.mean(((x-np.mean(x))/(np.std(x)+1e-12))**4))
@@ -276,15 +276,15 @@ def run(sub_select):
     s_p  = np.percentile(pq_tk,99)+1e-12
 
     ax = fig.add_subplot(gs[3,0])
-    ax.fill_between(t_qw, 0, mq_tk/s_m, color='#888', alpha=0.55, label=f'Recovery Baseline  P95={p95_mq:.5f}')
-    ax.fill_between(t_kw, 0, mk_tk/s_m, color=CM,    alpha=0.65, label=f'Korotkoff Active  P95={p95_mk:.5f}')
+    ax.fill_between(t_qw, 0, mq_tk/s_m, color='#888', alpha=0.55, label=f'Recovery Baseline  P95={p95_mq:.2e}')
+    ax.fill_between(t_kw, 0, mk_tk/s_m, color=CM,    alpha=0.65, label=f'Korotkoff Active  P95={p95_mk:.2e}')
     ax.set_title(f'(G) RF Mag TKEO Burst Energy  5s window comparison\nKorotkoff clicks are {ratio_m:.2f}x higher energy (P95)')
     ax.set_xlabel('Relative Time (s)'); ax.set_ylabel('Norm. TKEO Burst Energy')
     ax.legend(frameon=False)
 
     ax = fig.add_subplot(gs[3,1])
-    ax.fill_between(t_qw, 0, pq_tk/s_p, color='#888', alpha=0.55, label=f'Recovery Baseline  P95={p95_pq:.4f}')
-    ax.fill_between(t_kw, 0, pk_tk/s_p, color=CP,    alpha=0.65, label=f'Korotkoff Active  P95={p95_pk:.4f}')
+    ax.fill_between(t_qw, 0, pq_tk/s_p, color='#888', alpha=0.55, label=f'Recovery Baseline  P95={p95_pq:.1f}')
+    ax.fill_between(t_kw, 0, pk_tk/s_p, color=CP,    alpha=0.65, label=f'Korotkoff Active  P95={p95_pk:.1f}')
     ax.set_title(f'(H) RF Phase TKEO Burst Energy  5s window comparison\nKorotkoff clicks are {ratio_p:.2f}x higher energy (P95)')
     ax.set_xlabel('Relative Time (s)'); ax.set_ylabel('Norm. TKEO Burst Energy')
     ax.legend(frameon=False)
