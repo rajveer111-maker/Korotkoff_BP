@@ -17,6 +17,7 @@ plt.rcParams.update({
 
 BASE = r'd:\Bioview\My_RF_work_v1\data_new\data_latest'
 OUT = os.path.join(BASE, 'adaptive_matched_ground_truth.png')
+OUT2 = r'd:\Bioview\My_RF_work_v1\data_new\RMG_Paper_Results\figures\diagnostic\adaptive_matched_ground_truth.png'
 FS_RF = 10000; DEC = 10; FS = 1000
 CP = '#C0392B' # Red RF
 CS = '#2980B9' # Blue Steth
@@ -198,4 +199,7 @@ fig.suptitle('Automated Korotkoff Validation: High-Fidelity Agreement with Acous
 plt.tight_layout(rect=[0, 0.02, 1, 0.95])
 plt.subplots_adjust(hspace=0.35, wspace=0.1)
 plt.savefig(OUT, dpi=300, bbox_inches='tight')
+os.makedirs(os.path.dirname(OUT2), exist_ok=True)
+plt.savefig(OUT2, dpi=300, bbox_inches='tight')
 print(f"DONE: {OUT}")
+print(f"DONE: {OUT2}")

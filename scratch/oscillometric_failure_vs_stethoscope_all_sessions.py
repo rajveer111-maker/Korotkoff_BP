@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 BASE = r'd:\Bioview\My_RF_work_v1\data_new\data_latest'
 OUT = os.path.join(BASE, 'oscillometric_failure_vs_stethoscope_all_sessions.png')
+OUT2 = r'd:\Bioview\My_RF_work_v1\data_new\RMG_Paper_Results\figures\diagnostic\oscillometric_failure_vs_stethoscope_all_sessions.png'
 FS_RF = 10000
 DEC = 10
 FS = FS_RF // DEC
@@ -128,4 +129,7 @@ for idx, sub_dir in enumerate(['Sub_1_Prof_kan', 'Sub_2_Rajveer']):
 
 plt.tight_layout()
 plt.savefig(OUT, dpi=300, bbox_inches='tight')
+os.makedirs(os.path.dirname(OUT2), exist_ok=True)
+plt.savefig(OUT2, dpi=300, bbox_inches='tight')
 print(f"Saved to {OUT}")
+print(f"Saved to {OUT2}")

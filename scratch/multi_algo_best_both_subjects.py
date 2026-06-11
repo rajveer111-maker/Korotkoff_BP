@@ -71,8 +71,8 @@ def fit_circle(x, y):
 
 # Best Session from Each Subject (sub_dir, sub_name, rec_idx, k_on, k_off, lag, defl, notches)
 sessions = [
-    ('Sub_1_Prof_kan', 'Subject 1 (Prof. Kan)', 6, 27.53, 43.33, 1.7083, 18.0, [100.71, 201.43, 302.14, 402.86]),
-    ('Sub_2_Rajveer', 'Subject 2 (Rajveer)', 4, 27.38, 42.00, 2.6042, 18.6, [50.0, 64.0, 100.6, 201.2])
+    ('Sub_1_Prof_kan', 'Subject 1 (Prof. Kan)', 6, 27.75, 43.50, 1.7083, 18.3, [100.71, 201.43, 302.14, 402.86]),
+    ('Sub_2_Rajveer', 'Subject 2 (Rajveer)', 4, 27.375, 42.00, 2.6042, 18.6, [50.0, 64.0, 100.6, 201.2])
 ]
 
 fig, axes = plt.subplots(4, 2, figsize=(20, 16), dpi=300, facecolor='white')
